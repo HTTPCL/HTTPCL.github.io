@@ -1,82 +1,556 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="zh-CN" class="translated-ltr"><head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>游戏比赛官方网站</title>
-    <style>
-        body {
-            margin: 0; /* 移除默认边距 */
-            height: 100vh; /* 使背景至少覆盖整个视口高度 */
-            background-image: linear-gradient(to right, #225e71, #32a0c5, #32a0c5, #225e71); /* 使用斜角渐变背景 */
-            display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-            color: #fff
-        }
-        .centered-image {
-            max-width: 100%; /* 确保图片不会超过视口宽度 */
-            height: auto; /* 保持图片原有比例 */
-            transform: scale(0.25); /* 缩放至25% */
-        }
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(23, 72, 88, 0.6); /* 设置透明度为60% */
-            text-align: center;
-            transform: translateY(-100%);
-            transition: transform 0.5s ease;
-            z-index: 1000; /* 确保导航栏在最上层 */
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            padding: 15px;
-            display: inline-block;
-        }
-        .visible {
-            transform: translateY(0);
-        }
-        h2 {
-    font-size: 24px; /* 调整标题的字体大小 */
-    line-height: 2; /* 调整标题的行距 */
+    <script src="jquery-3.6.0.js"></script>
+    <script src="jquery-ui.js"></script>
+    <script src="jquery.form.min.js"></script>
+    <title>ACC Leaderboards</title>
+
+    <style type="text/css">
+body {
+    margin: 0;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 120%;
+    min-height: 100%;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-p {
-    font-size: 15px; /* 调整段落的字体大小 */
-    line-height: 1.5; /* 调整段落的行距 */
+        #wrapper {
+            background-color: black;
+            background-image: linear-gradient(to right, rgba(33,34,78), rgba(16,83,94), rgba(16,83,94), rgba(33,34,78)); /* 使用斜角渐变背景 */
+            min-height: 100%;
+        }
+
+        /* Hit Margin Styles */
+        .hitmargins-tooearly { color: #ff6565; }
+        .hitmargins-early { color: #EB9A46; }
+        .hitmargins-earlyperfect { color: #E3E370; }
+        .hitmargins-perfect { color: #86E370; }
+        .hitmargins-lateperfect { color: #E3E370; }
+        .hitmargins-late { color: #EB9A46; }
+        .hitmargins-toolate { color: #ED3E3E; }
+        .hitmargins-miss { color: #DA59FF; }
+        .hitmargins-overload { color: #DA59FF; }
+
+        /* Additional Styles */
+        .clean { opacity: 0.5; }
+        table { text-align: center; width: 0%; font-weight: 100; border-collapse: collapse; margin: auto; }
+        tbody:hover { background-color: rgba(255, 255, 255, 0.1); transition: 200ms; }
+        tr { font-weight: 100; text-overflow: ellipsis; transition: 500ms; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .number { font-weight: bold; font-size: 25px; width: 10%; }
+        .name { text-align: left; }
+        .xaccuracy { padding: 0; width: 120px; }
+        .avgxaccuracy { padding: 0; width: 120px; }
+        .score { padding: 0; width: 120px; }
+        .pureperfect { color: gold; }
+        .hitmargins { width: 45px; padding: 0; }
+        .map { width: 120px; padding-top: 10px; padding-bottom: 10px; }
+        .composer { width: 120px; padding-top: 10px; padding-bottom: 10px; }
+        .nodata { margin-top: 0.1px; }
+        h1:hover { transition: 0.2s linear; text-shadow: 0 0 6px #ffffff; }
+        .load { font-size: 20px; border: 2px solid white; border-radius: 5px; background-color: transparent; color: rgb(255, 255, 255); transition: 0.2s ease; }
+        .load:hover {background-color:rgba(124, 124, 255, 1); transition: 0.2s ease; cursor: pointer; box-shadow: 0 0 10px 0 #ffffff; }
+        .load:active { background-color: rgba(124, 124, 255, 0.7); transition: 0s; }
+        .blank { background-color: transparent; text-decoration: none; padding: 0; border: 0; }
+        #leaderboard { transition: 1000ms; }
+        hr { transition: 1000ms; }
+        td { white-space: nowrap; }
+
+        .passing-line {
+            border-bottom: 2px solid #ffd700;
+            position: relative;
+        }
+
+        .passing-line::before {
+            content: "晋级线";
+            position: absolute;
+            left: -70px;
+            top: 80px;
+            transform: translateY(-50%);
+            background-color: #ffd700;
+            padding: 5px 15px;
+            border: 1px solid black;
+            border-radius: 10px;
+            font-size: 0.8em;
+            box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.2);
+            color: black;
+        }
+        @media (max-width: 768px) {
+    /* 针对平板和手机的样式调整 */
+    #leaderboard, #headline {
+        width: 100% !important;
+    }
+
+    .name, .map, .composer, .xaccuracy, .score {
+        padding: 5px !important;
+        font-size: 14px !important;
+    }
+
+    .number, .hitmargins {
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* 针对更小屏幕的手机的样式调整 */
+    h1, h2, h3 {
+        font-size: 18px !important;
+    }
+
+    .load {
+        font-size: 16px !important;
+    }
 }
     </style>
 </head>
-<body>
 
-<nav id="navbar">
-    <img src="img/index/DOFR.png" alt="Centered Image" class="centered-image">
-    <a href="#leaderboard">排行榜</a>
-</nav>
+<body onload="setWidth()">
+    <div id="wrapper">
+        <br>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <h1 style="color: white; margin-right: 20px;" class="item animate__animated animate__fadeindown">DOFR冰与火之舞赛事排行榜</h1>
+        </div>
+        <h3>冬季淘汰赛</h3>
+        <button onclick="switchGroupA()" class="load" id="switchA" style="background-color: transparent;">A组排行榜</button>
+        <button onclick="switchGroupB()" class="load" id="switchB" style="background-color: transparent;">B组排行榜</button>
+        <hr style="width: 942.6px;" id="headline">
+        <div id="etA">
+        <h2>A组</h2>
+        <table cellpadding="10" id="leaderboard" class="item animate__animated animate__fadein animate__slow" style="width: 946.2px;">
+            <tbody>
+            <tr class="">
+                <td class="number item ">名次</td>
+                <td class="name item " style="font-weight: bold;font-size: 25px;">选手</td>
+                <td class="map title item ">谱面</td>
+                <td class="composer title item ">曲师</td>
+                <td class="hitmargins hitmargins-overload title item ">过载</td>
+                <td class="hitmargins hitmargins-tooearly title item ">提前</td>
+                <td class="hitmargins hitmargins-early title item ">太快</td>
+                <td class="hitmargins hitmargins-earlyperfect title item ">稍快</td>
+                <td class="hitmargins hitmargins-perfect title item ">完美</td>
+                <td class="hitmargins hitmargins-lateperfect title item ">稍慢</td>
+                <td class="hitmargins hitmargins-late title item ">太慢</td>
+                <td class="hitmargins hitmargins-miss title item ">漏拍</td>
+                <td class="xaccuracy title item">X-ACC</td>
+            </tr>
+            </tbody>
+        <tbody class="board" id="">
+            <tr class="box" id="row etA-1">
+                <td class="number item" rowspan="3">#1</td><td class="name item" rowspan="3">冷羽Leng_Yu</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">0</td>
+                <td class="hitmargins hitmargins-tooearly">0</td>
+                <td class="hitmargins hitmargins-early">0</td>
+                <td class="hitmargins hitmargins-earlyperfect">8</td>
+                <td class="hitmargins hitmargins-perfect">650</td>
+                <td class="hitmargins hitmargins-lateperfect">6</td>
+                <td class="hitmargins hitmargins-late">0</td>
+                <td class="hitmargins hitmargins-miss">0</td>
+                <td class="xaccuracy">99.47%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-2">
+                <td class="number item" rowspan="3">#2</td><td class="name item" rowspan="3">Reaper中子</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">0</td>
+                <td class="hitmargins hitmargins-tooearly">0</td>
+                <td class="hitmargins hitmargins-early">3</td>
+                <td class="hitmargins hitmargins-earlyperfect">11</td>
+                <td class="hitmargins hitmargins-perfect">634</td>
+                <td class="hitmargins hitmargins-lateperfect">14</td>
+                <td class="hitmargins hitmargins-late">2</td>
+                <td class="hitmargins hitmargins-miss">0</td>
+                <td class="xaccuracy">98.61%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-3">
+                <td class="number item" rowspan="3">#3</td><td class="name item" rowspan="3">【我是傻逼】<br>(请速速认领)</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">0</td>
+                <td class="hitmargins hitmargins-tooearly">0</td>
+                <td class="hitmargins hitmargins-early">2</td>
+                <td class="hitmargins hitmargins-earlyperfect">27</td>
+                <td class="hitmargins hitmargins-perfect">622</td>
+                <td class="hitmargins hitmargins-lateperfect">11</td>
+                <td class="hitmargins hitmargins-late">2</td>
+                <td class="hitmargins hitmargins-miss">0</td>
+                <td class="xaccuracy">98.21%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-4">
+                <td class="number item" rowspan="3">#4</td><td class="name item" rowspan="3">圣剑</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">0</td>
+                <td class="hitmargins hitmargins-tooearly">1</td>
+                <td class="hitmargins hitmargins-early">3</td>
+                <td class="hitmargins hitmargins-earlyperfect">12</td>
+                <td class="hitmargins hitmargins-perfect">625</td>
+                <td class="hitmargins hitmargins-lateperfect">22</td>
+                <td class="hitmargins hitmargins-late">2</td>
+                <td class="hitmargins hitmargins-miss">0</td>
+                <td class="xaccuracy">98.15%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-5">
+                <td class="number item" rowspan="3">#5</td><td class="name item" rowspan="3">mohuang111</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">0</td>
+                <td class="hitmargins hitmargins-tooearly">4</td>
+                <td class="hitmargins hitmargins-early">5</td>
+                <td class="hitmargins hitmargins-earlyperfect">16</td>
+                <td class="hitmargins hitmargins-perfect">608</td>
+                <td class="hitmargins hitmargins-lateperfect">23</td>
+                <td class="hitmargins hitmargins-late">8</td>
+                <td class="hitmargins hitmargins-miss">4</td>
+                <td class="xaccuracy">96.29%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-5">
+                <td class="number item" rowspan="3">#6</td><td class="name item" rowspan="3">龙力祺</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">1</td>
+                <td class="hitmargins hitmargins-tooearly">10</td>
+                <td class="hitmargins hitmargins-early">12</td>
+                <td class="hitmargins hitmargins-earlyperfect">19</td>
+                <td class="hitmargins hitmargins-perfect">573</td>
+                <td class="hitmargins hitmargins-lateperfect">42</td>
+                <td class="hitmargins hitmargins-late">14</td>
+                <td class="hitmargins hitmargins-miss">4</td>
+                <td class="xaccuracy">93.50%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-7">
+                <td class="number item" rowspan="3">#7</td><td class="name item" rowspan="3">Neoncombo</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">12</td>
+                <td class="hitmargins hitmargins-tooearly">62</td>
+                <td class="hitmargins hitmargins-early">18</td>
+                <td class="hitmargins hitmargins-earlyperfect">33</td>
+                <td class="hitmargins hitmargins-perfect">444</td>
+                <td class="hitmargins hitmargins-lateperfect">61</td>
+                <td class="hitmargins hitmargins-late">41</td>
+                <td class="hitmargins hitmargins-miss">67</td>
+                <td class="xaccuracy">74.52%</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr class="box" id="row etA-8">
+                <td class="number item" rowspan="3">#8</td><td class="name item" rowspan="3">怪怪</td>
+                <td class="map item">Amulet</td>
+                <td class="composer title item ">Overnote</td>
+                <td class="hitmargins hitmargins-overload">12</td>
+                <td class="hitmargins hitmargins-tooearly">102</td>
+                <td class="hitmargins hitmargins-early">31</td>
+                <td class="hitmargins hitmargins-earlyperfect">36</td>
+                <td class="hitmargins hitmargins-perfect">417</td>
+                <td class="hitmargins hitmargins-lateperfect">49</td>
+                <td class="hitmargins hitmargins-late">30</td>
+                <td class="hitmargins hitmargins-miss">101</td>
+                <td class="xaccuracy">66.52%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div id="etB">
+    <h2>B组</h2>
+    <table cellpadding="10" id="leaderboard" class="item animate__animated animate__fadein animate__slow" style="width: 946.2px;">
+        <tbody>
+        <tr class="">
+            <td class="number item ">名次</td>
+            <td class="name item " style="font-weight: bold;font-size: 25px;">选手</td>
+            <td class="map title item ">谱面</td>
+            <td class="composer title item ">曲师</td>
+            <td class="hitmargins hitmargins-overload title item ">过载</td>
+            <td class="hitmargins hitmargins-tooearly title item ">提前</td>
+            <td class="hitmargins hitmargins-early title item ">太快</td>
+            <td class="hitmargins hitmargins-earlyperfect title item ">稍快</td>
+            <td class="hitmargins hitmargins-perfect title item ">完美</td>
+            <td class="hitmargins hitmargins-lateperfect title item ">稍慢</td>
+            <td class="hitmargins hitmargins-late title item ">太慢</td>
+            <td class="hitmargins hitmargins-miss title item ">漏拍</td>
+            <td class="xaccuracy title item">X-ACC</td>
+        </tr>
+        </tbody>
+    <tbody class="board" id="">
+        <tr class="box" id="row etA-1">
+            <td class="number item" rowspan="3">#1</td><td class="name item" rowspan="3">ARES_PTG</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">0</td>
+            <td class="hitmargins hitmargins-tooearly">3</td>
+            <td class="hitmargins hitmargins-early">2</td>
+            <td class="hitmargins hitmargins-earlyperfect">11</td>
+            <td class="hitmargins hitmargins-perfect">1390</td>
+            <td class="hitmargins hitmargins-lateperfect">6</td>
+            <td class="hitmargins hitmargins-late">0</td>
+            <td class="hitmargins hitmargins-miss">1</td>
+            <td class="xaccuracy">99.37%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-2">
+            <td class="number item" rowspan="3">#2</td><td class="name item" rowspan="3">MitsukiYume</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">0</td>
+            <td class="hitmargins hitmargins-tooearly">3</td>
+            <td class="hitmargins hitmargins-early">3</td>
+            <td class="hitmargins hitmargins-earlyperfect">21</td>
+            <td class="hitmargins hitmargins-perfect">1367</td>
+            <td class="hitmargins hitmargins-lateperfect">16</td>
+            <td class="hitmargins hitmargins-late">2</td>
+            <td class="hitmargins hitmargins-miss">1</td>
+            <td class="xaccuracy">98.89%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-3">
+            <td class="number item" rowspan="3">#3</td><td class="name item" rowspan="3">Azure_Comet</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">0</td>
+            <td class="hitmargins hitmargins-tooearly">5</td>
+            <td class="hitmargins hitmargins-early">1</td>
+            <td class="hitmargins hitmargins-earlyperfect">20</td>
+            <td class="hitmargins hitmargins-perfect">1366</td>
+            <td class="hitmargins hitmargins-lateperfect">16</td>
+            <td class="hitmargins hitmargins-late">3</td>
+            <td class="hitmargins hitmargins-miss">4</td>
+            <td class="xaccuracy">98.63%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-4">
+            <td class="number item" rowspan="3">#4</td><td class="name item" rowspan="3">黑Au</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">0</td>
+            <td class="hitmargins hitmargins-tooearly">9</td>
+            <td class="hitmargins hitmargins-early">9</td>
+            <td class="hitmargins hitmargins-earlyperfect">40</td>
+            <td class="hitmargins hitmargins-perfect">1341</td>
+            <td class="hitmargins hitmargins-lateperfect">15</td>
+            <td class="hitmargins hitmargins-late">1</td>
+            <td class="hitmargins hitmargins-miss">4</td>
+            <td class="xaccuracy">97.82%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-5">
+            <td class="number item" rowspan="3">#5</td><td class="name item" rowspan="3">KaitsitMnO4</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">0</td>
+            <td class="hitmargins hitmargins-tooearly">13</td>
+            <td class="hitmargins hitmargins-early">11</td>
+            <td class="hitmargins hitmargins-earlyperfect">51</td>
+            <td class="hitmargins hitmargins-perfect">1316</td>
+            <td class="hitmargins hitmargins-lateperfect">22</td>
+            <td class="hitmargins hitmargins-late">3</td>
+            <td class="hitmargins hitmargins-miss">0</td>
+            <td class="xaccuracy">96.90%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-5">
+            <td class="number item" rowspan="3">#6</td><td class="name item" rowspan="3">Filok（兵王）</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">3</td>
+            <td class="hitmargins hitmargins-tooearly">9</td>
+            <td class="hitmargins hitmargins-early">9</td>
+            <td class="hitmargins hitmargins-earlyperfect">54</td>
+            <td class="hitmargins hitmargins-perfect">1284</td>
+            <td class="hitmargins hitmargins-lateperfect">47</td>
+            <td class="hitmargins hitmargins-late">7</td>
+            <td class="hitmargins hitmargins-miss">9</td>
+            <td class="xaccuracy">96.20%</td>
+        </tr>
+    </tbody>
+    <tbody>
+        <tr class="box" id="row etA-7">
+            <td class="number item" rowspan="3">#7</td><td class="name item" rowspan="3">RUI倾寒</td>
+            <td class="map item">Luminescence</td>
+            <td class="composer title item ">米虾Fomiki & 初云CLoudie</td>
+            <td class="hitmargins hitmargins-overload">9</td>
+            <td class="hitmargins hitmargins-tooearly">46</td>
+            <td class="hitmargins hitmargins-early">23</td>
+            <td class="hitmargins hitmargins-earlyperfect">68</td>
+            <td class="hitmargins hitmargins-perfect">1123</td>
+            <td class="hitmargins hitmargins-lateperfect">101</td>
+            <td class="hitmargins hitmargins-late">43</td>
+            <td class="hitmargins hitmargins-miss">52</td>
+            <td class="xaccuracy">87.60%</td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    </div>
 
-<h2>
-    1.赛事简介
-</h2>
-<p>
-    <br><br>本比赛是由CWD团队举办并根据国际AWC赛事模仿而成。创办本比赛的初衷是为了让更多的人认识到冰与火之舞（ADOFAI），并且让已经入坑的玩家有一个好的展示舞台。
-</p>
-<h2>
 
-</h2>
 <script>
-    window.addEventListener('scroll', function() {
-        var navbar = document.getElementById('navbar');
-        if (window.scrollY > 0) {
-            navbar.classList.add('visible');
-        } else {
-            navbar.classList.remove('visible');
+    function loadGroup(requestLink, group) {
+        // Clear existing leaderboard data
+        $(".board").remove();
+
+        // Create and append form for data request
+        createAndAppendForm(requestLink, group);
+    }
+
+    function createAndAppendForm(requestLink, group) {
+        let form = $("<form method='GET' id='data-form'></form>").attr({ "action": requestLink + "/" + group });
+        $("#leaderboard").append(form);
+
+        // Configure form to handle AJAX submission
+        form.ajaxForm({ complete: handleDataResponse });
+
+        form.submit();
+        form.remove();
+    }
+
+    function handleDataResponse(data) {
+        let jsonArray = JSON.parse(data.responseText);
+        jsonArray.forEach((playerData, index) => {
+            let rank = index + 1;
+            appendPlayerRank(playerData, rank);
+        });
+    }
+
+    function appendPlayerRank(playerData, rank) {
+        // Create and append player data rows
+        let clazz = "board";
+        if(rank === 16){
+            clazz += " passing-line";
         }
+        let $tbody = $("<tbody class='" + clazz + "' id='body-" + rank + "'></tbody>");
+        $("#leaderboard").append($tbody);
+
+        // Append rows for player data
+        let totalScore = 0;
+        totalScore += appendPlayerDataRow(playerData, rank, $tbody, 1); // First row
+        if(currentGroup === "A"){
+            totalScore += appendPlayerDataRow(playerData, rank, $tbody, 2); // Second row A
+        } else {
+            totalScore += appendPlayerDataRow(playerData, rank, $tbody, 3); // Second row B
+        }
+
+        $("#row1-" + rank).append($("<td class='score item' rowspan='3'>" + totalScore.toFixed(4) + "</td>"));
+    }
+
+    function appendPlayerDataRow(playerData, rank, $tbody, rowNumber) {
+        let $row = $("<tr class='box' id='row" + rowNumber + "-" + rank + "'></tr>");
+        $tbody.append($row);
+
+        // Populate player info
+        if (rowNumber === 1) {
+            $row.append($("<td class='number item' rowspan='3'>#" + rank + "</td>"));
+            $row.append($("<td class='name item' rowspan='3'>" + playerData.displayName + "</td>"));
+        }
+
+        // Populate data in the row
+        if (rowNumber === 1) {
+            $row.append($("<td class='map item'>" + "Sanctuary" + "</td>"));
+        } else if (rowNumber === 2) {
+            $row.append($("<td class='map item'>" + "Caged Empty" + "</td>"));
+        } else if (rowNumber === 3) {
+            $row.append($("<td class='map item'>" + "Forever Friends" + "</td>"));
+        }
+
+        // Append hit margins and accuracy data
+        return appendHitMarginsAndAccuracy(playerData, rank, $row, rowNumber);
+    }
+
+    function appendHitMarginsAndAccuracy(playerData, rank, $row, rowNumber) {
+        if(playerData.hasOwnProperty("xAcc_" + rowNumber)){
+            // Iterate over hit margin data and append to the row
+            let array = [9, 0, 1, 2, 3, 4, 5, 6, 8];
+            for (let element of array) {
+                let i = parseInt(element);
+
+                let hitMarginClass = getHitMarginClass(i);
+                let hitMarginValue = playerData["hitMargins_" + rowNumber][i];
+
+                if (hitMarginValue === 0 || hitMarginValue === "0") {
+                    $row.append($("<td class='hitmargins " + hitMarginClass + " clean item'>" + hitMarginValue + "</td>"));
+                } else {
+                    $row.append($("<td class='hitmargins " + hitMarginClass + " item'>" + hitMarginValue + "</td>"));
+                }
+            }
+
+            // Append accuracy data
+            let accuracy = (playerData["xAcc_" + rowNumber] * 100).toFixed(4);
+            if (accuracy === "100.0000") {
+                $row.append($("<td class='xaccuracy pureperfect item'>" + "100.000%" + "</td>"));
+            } else {
+                $row.append($("<td class='xaccuracy item'>" + accuracy + "%" + "</td>"));
+            }
+
+            let score = (playerData["score_" + rowNumber] * 100).toFixed(4);
+            $row.append($("<td class='score item'>" + score + "</td>"));
+
+            return parseFloat(score);
+        }else{
+            $row.append($("<td class='nodata item' colspan='11'>" + "暂无数据" + "</td>"));
+            return 0;
+        }
+    }
+
+    function getHitMarginClass(index) {
+        // Returns the CSS class based on the hit margin index
+        switch (index) {
+            case 0: return 'hitmargins-tooearly';
+            case 1: return 'hitmargins-early';
+            case 2: return 'hitmargins-earlyperfect';
+            case 3: return 'hitmargins-perfect';
+            case 4: return 'hitmargins-lateperfect';
+            case 5: return 'hitmargins-late';
+            case 6: return 'hitmargins-toolate';
+            case 8: return 'hitmargins-miss';
+            case 9: return 'hitmargins-overload';
+            default: return '';
+        }
+    }
+    function setWidth() {
+            if (window.innerWidth < 1400 || window.innerWidth < window.innerHeight) {
+                $("#leaderboard").css("width", $(document.body).width());
+                $("#headline").css("width", $(document.body).width() - 6);
+            } else {
+                $("#leaderboard").css("width", ($(document.body).width()) * 0.6);
+                $("#headline").css("width", ($(document.body).width() - 6) * 0.6);
+            }
+        }
+
+
+    $(document).ready(function() {
+    window.switchGroupA = function() {
+            $("#switchA").css("background-color", "rgba(124, 124, 255, 0.7)");
+            $("#switchB").css("background-color", "transparent");
+        window.location.href = '#etA';
+    }
     });
+
+    $(document).ready(function() {
+    window.switchGroupB = function() {
+            $("#switchB").css("background-color", "rgba(124, 124, 255, 0.7)");
+            $("#switchA").css("background-color", "transparent");
+        window.location.href = '#etB';
+    }
+    });
+
 </script>
 
-</body>
-</html>
+</body></html>
