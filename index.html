@@ -1,31 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>HTTPCL</title>
-    <link rel="icon" href="img/1.jpg">
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏比赛官方网站</title>
+    <style>
+        body {
+            margin: 0; /* 移除默认边距 */
+            height: 100vh; /* 使背景至少覆盖整个视口高度 */
+            background-image: linear-gradient(to right, #225e71, #32a0c5, #32a0c5, #225e71); /* 使用斜角渐变背景 */
+            display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+            color: #fff
+        }
+        .centered-image {
+            max-width: 100%; /* 确保图片不会超过视口宽度 */
+            height: auto; /* 保持图片原有比例 */
+            transform: scale(0.25); /* 缩放至25% */
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(23, 72, 88, 0.6); /* 设置透明度为60% */
+            text-align: center;
+            transform: translateY(-100%);
+            transition: transform 0.5s ease;
+            z-index: 1000; /* 确保导航栏在最上层 */
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            display: inline-block;
+        }
+        .visible {
+            transform: translateY(0);
+        }
+        h2 {
+    font-size: 24px; /* 调整标题的字体大小 */
+    line-height: 2; /* 调整标题的行距 */
+}
+
+p {
+    font-size: 15px; /* 调整段落的字体大小 */
+    line-height: 1.5; /* 调整段落的行距 */
+}
+    </style>
 </head>
 <body>
-    <header>
-        <h1>欢迎来到HTTPCL网站！</h1>
-    </header>
-    <main>
-        <h2>关于我</h2>
-        <p>我是HTTPCL，B站账号为<a href="https://space.bilibili.com/695146110" target="_blank">到处乱跑的隐藏者</a>。十分期待大家去关注我！</p>
 
-        <h2>项目</h2>
-        <ul>
-            <li>项目一：和SystemBM5071合作的《编曲接力2》冰与火之舞谱面。目前最新版本B站视频链接：<a href="https://www.bilibili.com/video/BV1aF411C74P" target="_blank">点我跳转</a></li>
-        </ul>
-        
-        <h2>特别鸣谢</h2>
-        <p>十分感谢SystemBM5071为我搭建网站！<a href="https://space.bilibili.com/1780343359" target="_blank">点我跳转SystemBM5071的B站主页！</a></p>
+<nav id="navbar">
+    <img src="img/index/DOFR.png" alt="Centered Image" class="centered-image">
+    <a href="#leaderboard">排行榜</a>
+</nav>
 
-        <h2>文章</h2>
-        <a href="./article/" target="_blank">点击跳转</a>
-    </main>
-    <footer>
-        <p>&copy; 2023 HTTPCL. All rights reserved.</p>
-    </footer>
+<h2>
+    1.赛事简介
+</h2>
+<p>
+    <br><br>本比赛是由CWD团队举办并根据国际AWC赛事模仿而成。创办本比赛的初衷是为了让更多的人认识到冰与火之舞（ADOFAI），并且让已经入坑的玩家有一个好的展示舞台。
+</p>
+<h2>
+
+</h2>
+<script>
+    window.addEventListener('scroll', function() {
+        var navbar = document.getElementById('navbar');
+        if (window.scrollY > 0) {
+            navbar.classList.add('visible');
+        } else {
+            navbar.classList.remove('visible');
+        }
+    });
+</script>
+
 </body>
 </html>
